@@ -1,25 +1,43 @@
 <?php
-class personnage
+abstract class Personnage
 {
 
-    private $_experience = 0;
-    private $_vie = 100;
-    private $_force = 20;
-    private $_degats = 0;
-    private $_nom = 'inconnu';
+    protected $_experience = 1;
+    protected $_vie = 100;
+    protected $_force = 20;
+    protected $_degats = 0;
+    protected $_niveau = 0;
+    protected $_nom = 'inconnu';
+    protected $_id;
+    protected static $_compteur = 0;
 
-    public function __construct($nom, $force = 10, $vie = 100, $experience = 0)
+    protected const EST_MORT = 1;
+    protected const EST_FRAPPE = 2;
+    protected const EST_LUI_MEME = 3;
+
+    public function __construct($ligne)
     {
-        $this->setNom($nom);
-        $this->setForce($force);
-        $this->setVie($vie);
-        $this->setExperience($experience);
-        print('<br/> Le personnage"' . $nom . '" est créé !');
+        $this->hydrate($ligne);
+        self::$_compteur++;
+        //print('<br/> Le perosnnage"'.$this->getNom().'" est créé ! <br/>');
+        // self::parler();
+    }
+    public function hydrate(array $ligne)
+    {
+        foreach ($ligne as $key => $value) {
+            $method = 'set' . ucfirst($key);
+            //print('hydrate method= '.$method . '('.$value.')<br/>');
+
+            if (method_exists($this, $method)) {
+                $this->$method($value);
+            }
+        }
     }
     public function __toString()
     {
         return $this->getNom() . ' a ' . $this->getVie() . ' point de vie' . ' , a une force de ' . $this->getForce() . ' et a ' . $this->_experience . ' point d\' expérience';
     }
+
     public function setNom($nom)
     {
         if (!is_string($nom)) {
@@ -48,6 +66,14 @@ class personnage
     {
         return $this->_force;
     }
+    public function setNiveau($niveau)
+    {
+        $this->_niveau = $niveau;
+    }
+    public function getNiveau()
+    {
+        return $this->_niveau;
+    }
     public function setExperience($experience)
     {
         if (!is_int($experience)) {
@@ -60,9 +86,9 @@ class personnage
         }
         $this->_experience = $experience;
     }
-    public function afficherExperience()
+    public function getExperience()
     {
-        print('expérience de ' . $this->getNom() . ' = ' . $this->_experience);
+        return $this->_experience;
     }
     public function gagnerExperience($valeur = 1)
     {
@@ -71,8 +97,17 @@ class personnage
     }
     public function frapper(Personnage $adversaire)
     {
+        if ($adversaire->getId() == $this->getId()) {
+            return self::EST_LUI_MEME;
+        }
         $adversaire->_vie -= $this->_force;
         print('<br/> ' . $adversaire->getNom() . ' a été frappé par ' . $this->getNom() . ' , vie restante de  ' . $adversaire->getNom() . ' = ' . $adversaire->_vie . '<br/>');
+
+        if ($adversaire->getVie() <= 0) {
+            return self::EST_MORT;
+        } else {
+            return self::EST_FRAPPE;
+        }
     }
     public function setVie($vie)
     {
@@ -81,6 +116,14 @@ class personnage
     public function getVie()
     {
         return $this->_vie;
+    }
+    public function getId()
+    {
+        return $this->_id;
+    }
+    public function setId($id)
+    {
+        $this->_id = $id;
     }
     public function afficherStats()
     {
